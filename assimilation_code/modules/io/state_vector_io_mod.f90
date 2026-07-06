@@ -28,7 +28,7 @@ module state_vector_io_mod
 !> is then called in filter to generate the ensemble.
 
 use adaptive_inflate_mod, only : adaptive_inflate_type, mean_from_restart, sd_from_restart, &
-                                 do_single_ss_inflate, &
+                                 do_single_ss_inflate, do_covariance_inflate, &
                                  get_inflate_mean, get_inflate_sd, do_ss_inflate, &
                                  get_is_prior, get_is_posterior, get_inflation_mean_copy, &
                                  get_inflation_sd_copy, print_inflation_restart_filename
@@ -367,11 +367,11 @@ if (.not. do_single_ss_inflate(prior_inflate_handle) .and. &
 
 return_me = .true.
 ! Return if not reading any state space inflation values from files
-if ( do_single_ss_inflate(prior_inflate_handle)) then
+if (do_single_ss_inflate(prior_inflate_handle)) then
    if (mean_from_restart(prior_inflate_handle)) return_me = .false.
    if (sd_from_restart(prior_inflate_handle))   return_me = .false.
 endif
-if ( do_single_ss_inflate(post_inflate_handle)) then
+if (do_single_ss_inflate(post_inflate_handle)) then
    if (mean_from_restart(post_inflate_handle)) return_me = .false.
    if (sd_from_restart(post_inflate_handle))   return_me = .false.
 endif
@@ -382,7 +382,7 @@ inf_count = 0
 if (do_single_ss_inflate(prior_inflate_handle)) inf_count = 2
 if (do_single_ss_inflate(post_inflate_handle))  inf_count = inf_count + 2
 
-allocate(inf_array(inf_count)) ! for sending and recveiving inflation values
+allocate(inf_array(inf_count)) ! for sending and receiving inflation values
 
 ! Find out who owns the first element of vars array
 first_element = 1
@@ -401,13 +401,13 @@ if (ens_handle%my_pe == owner) then
       inf_array(3) = ens_handle%copies(POST_INF_MEAN,  owners_index)
       inf_array(4) = ens_handle%copies(POST_INF_SD,    owners_index)
 
-   elseif (do_single_ss_inflate(post_inflate_handle) .and. &
+   elseif (do_single_ss_inflate(prior_inflate_handle) .and. &
      .not. do_single_ss_inflate(post_inflate_handle)) then
 
       inf_array(1) = ens_handle%copies(PRIOR_INF_MEAN, owners_index)
       inf_array(2) = ens_handle%copies(PRIOR_INF_SD,   owners_index)
 
-   elseif(.not. do_single_ss_inflate(post_inflate_handle) .and. &
+   elseif(.not. do_single_ss_inflate(prior_inflate_handle) .and. &
                 do_single_ss_inflate(post_inflate_handle)) then
 
       inf_array(1) = ens_handle%copies(POST_INF_MEAN, owners_index)
@@ -424,22 +424,22 @@ else
    if (do_single_ss_inflate(prior_inflate_handle) .and. &
        do_single_ss_inflate(post_inflate_handle)) then
 
-      ens_handle%copies(PRIOR_INF_MEAN, owners_index) = inf_array(1)
-      ens_handle%copies(PRIOR_INF_SD,   owners_index) = inf_array(2)
-      ens_handle%copies(POST_INF_MEAN,  owners_index) = inf_array(3)
-      ens_handle%copies(POST_INF_SD,    owners_index) = inf_array(4)
+      ens_handle%copies(PRIOR_INF_MEAN, 1) = inf_array(1)
+      ens_handle%copies(PRIOR_INF_SD,   1) = inf_array(2)
+      ens_handle%copies(POST_INF_MEAN,  1) = inf_array(3)
+      ens_handle%copies(POST_INF_SD,    1) = inf_array(4)
 
    elseif (do_single_ss_inflate(prior_inflate_handle) .and. &
      .not. do_single_ss_inflate(post_inflate_handle)) then
 
-      ens_handle%copies(PRIOR_INF_MEAN, owners_index) = inf_array(1)
-      ens_handle%copies(PRIOR_INF_SD,   owners_index) = inf_array(2)
+      ens_handle%copies(PRIOR_INF_MEAN, 1) = inf_array(1)
+      ens_handle%copies(PRIOR_INF_SD,   1) = inf_array(2)
 
    elseif(.not. do_single_ss_inflate(prior_inflate_handle) .and. &
                 do_single_ss_inflate(post_inflate_handle)) then
 
-      ens_handle%copies(POST_INF_MEAN, owners_index) = inf_array(1)
-      ens_handle%copies(POST_INF_SD,   owners_index) = inf_array(2)
+      ens_handle%copies(POST_INF_MEAN, 1) = inf_array(1)
+      ens_handle%copies(POST_INF_SD,   1) = inf_array(2)
 
    endif
 
@@ -467,7 +467,8 @@ INF_SD_COPY   = get_inflation_sd_copy(  inflate_handle)
 
 ! To match Lanai filter_state_space_diagnostics, 
 ! if not doing inflation set inf_mean = 1, inf_sd = 0
-if (.not. do_ss_inflate(inflate_handle)) then
+if (.not. do_ss_inflate(inflate_handle) .and. &
+    .not. do_covariance_inflate(inflate_handle)) then
    ens_handle%copies(INF_MEAN_COPY, :) = 1.0_r8
    ens_handle%copies(INF_SD_COPY, :)   = 0.0_r8
    return

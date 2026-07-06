@@ -59,7 +59,7 @@ use adaptive_inflate_mod,  only : do_ss_inflate, mean_from_restart, sd_from_rest
                                   validate_inflate_options, PRIOR_INF, POSTERIOR_INF, &
                                   NO_INFLATION, OBS_INFLATION, VARYING_SS_INFLATION,  &
                                   SINGLE_SS_INFLATION, RELAXATION_TO_PRIOR_SPREAD,    &
-                                  ENHANCED_SS_INFLATION
+                                  ENHANCED_SS_INFLATION, COVARIANCE_ONLY_INFLATION
 
 use mpi_utilities_mod,     only : my_task_id, task_sync, broadcast_send, broadcast_recv,      &
                                   task_count
@@ -576,7 +576,6 @@ call log_inflation_info(prior_inflate, state_ens_handle%my_pe, 'Prior', single_f
 call get_minmax_task_zero(post_inflate, state_ens_handle, POST_INF_COPY, POST_INF_SD_COPY)
 call log_inflation_info(post_inflate, state_ens_handle%my_pe, 'Posterior', single_file_in)
 
-
 if (perturb_from_single_instance) then
    call error_handler(E_MSG,'filter_main:', &
       'Reading in a single member and perturbing data for the other ensemble members')
@@ -899,7 +898,7 @@ AdvanceTime : do
       ENS_MEAN_COPY, ENS_SD_COPY, &
       PRIOR_INF_COPY, PRIOR_INF_SD_COPY, OBS_KEY_COPY, OBS_GLOBAL_QC_COPY, &
       OBS_MEAN_START, OBS_MEAN_END, OBS_VAR_START, &
-      OBS_VAR_END, inflate_only = .false.)
+      OBS_VAR_END, inflate_only = .false., post_inflate = post_inflate, ENS_INF_POST_COPY = POST_INF_COPY)
 
    call timestamp_message('After  observation assimilation')
    call     trace_message('After  observation assimilation')
