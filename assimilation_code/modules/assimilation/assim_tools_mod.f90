@@ -1626,7 +1626,7 @@ if (present(inflation_value_prior) .and. .not. present(inflation_value_post)) th
    state_inc = reg_coef * obs_inc + (inflation_value_prior - 1) * (state - state_mean)
 elseif (present(inflation_value_prior) .and. present(inflation_value_post)) then
    obs_inc_mean = sum(obs_inc) / ens_size
-   state_inc = reg_coef * inflation_value_post * obs_inc + (inflation_value_prior * inflation_value_post - 1) * (state - state_mean) - (inflation_value_post - 1) * reg_coef * obs_inc_mean
+   state_inc = reg_coef * inflation_value_prior * inflation_value_post * obs_inc + (inflation_value_prior * inflation_value_post - 1) * (state - state_mean) - (inflation_value_post - 1) * reg_coef * obs_inc_mean
 elseif (.not. present(inflation_value_prior) .and. present(inflation_value_post)) then
    obs_inc_mean = sum(obs_inc) / ens_size
    state_inc = reg_coef * inflation_value_post * obs_inc + (inflation_value_post - 1) * (state - state_mean) - (inflation_value_post - 1) * reg_coef * obs_inc_mean

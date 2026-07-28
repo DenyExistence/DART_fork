@@ -59,7 +59,7 @@ use adaptive_inflate_mod,  only : do_ss_inflate, mean_from_restart, sd_from_rest
                                   validate_inflate_options, PRIOR_INF, POSTERIOR_INF, &
                                   NO_INFLATION, OBS_INFLATION, VARYING_SS_INFLATION,  &
                                   SINGLE_SS_INFLATION, RELAXATION_TO_PRIOR_SPREAD,    &
-                                  ENHANCED_SS_INFLATION, COVARIANCE_ONLY_INFLATION
+                                  ENHANCED_SS_INFLATION
 
 use mpi_utilities_mod,     only : my_task_id, task_sync, broadcast_send, broadcast_recv,      &
                                   task_count
